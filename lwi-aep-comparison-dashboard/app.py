@@ -176,7 +176,7 @@ with col_map:
         callback_js = """
         function (row) {
             var marker = L.circleMarker(new L.LatLng(row[0], row[1]), {
-                radius: 3, fillColor: '#2171b5', color: '#2171b5', weight: 1, fillOpacity: 0.6
+                radius: 2, fillColor: '#000000', color: '#000000', weight: 1, fillOpacity: 0.3
             });
             return marker;
         };
@@ -197,7 +197,7 @@ with col_map:
                 'zoomToBoundsOnClick': False,
             },
         ).add_to(m)
-        folium.LayerControl().add_to(m)
+        folium.LayerControl(collapsed=False).add_to(m)
 
         fg_selected = folium.FeatureGroup(name="Selected Cell Marker")
         selected_row = gdf.iloc[st.session_state.selected_idx]
