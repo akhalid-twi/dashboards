@@ -1,17 +1,3 @@
-# -----------------------------------------------------------------------
-# Footer disclaimer
-# -----------------------------------------------------------------------
-st.markdown("---")
-st.markdown(
-    """
-    <div style="text-align: center; color: gray; font-size: 0.85em;">
-    <b>DRAFT VERSION — NOT FOR REDISTRIBUTION</b><br>
-    Not to be used for decision making.<br>
-    © The Water Institute
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 import json
 import time
@@ -340,3 +326,20 @@ with col_plot:
     st.plotly_chart(fig, width='stretch')
     print(f"[TIMER] AEP plot build (JSON parse + plotly figure): "
           f"{time.perf_counter() - _t0_plot:.3f}s")
+
+
+
+# -----------------------------------------------------------------------
+# Footer disclaimer
+# -----------------------------------------------------------------------
+st.markdown("---")
+st.markdown(
+    """
+    <div style="text-align: center; color: gray; font-size: 0.85em;">
+    <b>DRAFT VERSION — NOT FOR REDISTRIBUTION</b><br>
+    Not to be used for decision making.<br>
+    © The Water Institute
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
