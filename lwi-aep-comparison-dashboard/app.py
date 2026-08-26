@@ -1,3 +1,18 @@
+# -----------------------------------------------------------------------
+# Footer disclaimer
+# -----------------------------------------------------------------------
+st.markdown("---")
+st.markdown(
+    """
+    <div style="text-align: center; color: gray; font-size: 0.85em;">
+    <b>DRAFT VERSION — NOT FOR REDISTRIBUTION</b><br>
+    Not to be used for decision making.<br>
+    © The Water Institute
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 import json
 import time
 import urllib.request
