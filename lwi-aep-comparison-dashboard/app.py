@@ -29,8 +29,8 @@ class _Timer:
 # =============================================================================
 st.set_page_config(page_title="Coastwide AEP Comparison Dashboard", layout="wide")
 
-DATA_PATH = "assets/dashboard_data_lw2.parquet"
-FEMA_PATH = "assets/fema_zones.parquet"  # lightweight, merged (A/V) vector layer — set to None to skip
+DATA_PATH = "https://github.com/akhalid-twi/dashboards/blob/main/lwi-aep-comparison-dashboard/assets/dashboard_data_lw.parquet"
+FEMA_PATH = "https://github.com/akhalid-twi/dashboards/blob/main/lwi-aep-comparison-dashboard/assets/fema_zones.parquet"  # lightweight, merged (A/V) vector layer — set to None to skip
 
 DEFAULT_MAP_CENTER = [29.95, -89.90]
 DEFAULT_MAP_ZOOM = 10
