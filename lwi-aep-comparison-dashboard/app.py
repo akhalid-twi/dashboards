@@ -29,8 +29,8 @@ class _Timer:
 # =============================================================================
 st.set_page_config(page_title="Coastwide AEP Comparison Dashboard", layout="wide")
 
-DATA_PATH = "https://github.com/akhalid-twi/dashboards/blob/main/lwi-aep-comparison-dashboard/assets/dashboard_data_lw.parquet"
-FEMA_PATH = "https://github.com/akhalid-twi/dashboards/blob/main/lwi-aep-comparison-dashboard/assets/fema_zones.parquet"  # lightweight, merged (A/V) vector layer — set to None to skip
+DATA_PATH = "assets/dashboard_data_lw.parquet"
+FEMA_PATH = "assets/fema_zones.parquet"  # lightweight, merged (A/V) vector layer — set to None to skip
 
 DEFAULT_MAP_CENTER = [29.95, -89.90]
 DEFAULT_MAP_ZOOM = 10
@@ -178,6 +178,7 @@ with col_map:
         FastMarkerCluster(
             data=data_points,
             callback=callback_js,
+            name="Sampled RAS cells",
             options={
                 'disableClusteringAtZoom': 1,
                 'spiderfyOnMaxZoom': False,
@@ -237,9 +238,6 @@ LABEL_MAP = {
     "LWI_TC_Base": "TC Compound AEP",
 }
 
-ANNOTATE_LABEL = "LWI_TC_Base"   # which series to annotate (TC Compound AEP)
-ANNOTATE_RP = 100.0              # at which return period
-
 with col_plot:
     _t0_plot = time.perf_counter()
     raw_bfe = selected_row.get("fema_bfe")
@@ -272,32 +270,6 @@ with col_plot:
             line=dict(color=style["color"], dash=style["dash"], width=style["width"]),
             marker=dict(size=4),
         ))
-
-        if label == ANNOTATE_LABEL:
-            match = [pt for pt in parsed if pt[0] == ANNOTATE_RP]
-            if match:
-                rp_x, rp_y = match[0]
-
-                annotation_lines = [f"<b>{display_label}</b>", f"{int(ANNOTATE_RP)}-yr: {rp_y:.2f} ft"]
-                if fema_bfe is not None:
-                    delta = rp_y - fema_bfe
-                    annotation_lines.append(f"FEMA BFE: {fema_bfe:.2f} ft (\u0394 {delta:+.2f} ft)")
-
-                fig.add_annotation(
-                    x=rp_x, y=rp_y,
-                    text="<br>".join(annotation_lines),
-                    showarrow=True, arrowhead=2, arrowcolor=style["color"],
-                    ax=40, ay=-60,
-                    bgcolor="white", bordercolor=style["color"], borderwidth=1.5,
-                    borderpad=4, opacity=0.95,
-                    font=dict(size=12, color=style["color"]),
-                    align="left",
-                )
-                fig.add_trace(go.Scatter(
-                    x=[rp_x], y=[rp_y], mode="markers",
-                    marker=dict(size=10, color=style["color"], symbol="circle-open", line=dict(width=2)),
-                    showlegend=False, hoverinfo="skip",
-                ))
 
     if fema_bfe is not None:
         fig.add_hline(
