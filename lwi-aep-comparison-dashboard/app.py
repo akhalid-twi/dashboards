@@ -1,5 +1,7 @@
 import json
 import time
+import urllib.request
+from io import BytesIO
 
 import folium
 import geopandas as gpd
@@ -29,8 +31,8 @@ class _Timer:
 # =============================================================================
 st.set_page_config(page_title="Coastwide AEP Comparison Dashboard", layout="wide")
 
-DATA_PATH = "https://github.com/akhalid-twi/dashboards/raw/refs/heads/main/lwi-aep-comparison-dashboard/assets/dashboard_data_lw.parquet"
-FEMA_PATH = "https://github.com/akhalid-twi/dashboards/raw/refs/heads/main/lwi-aep-comparison-dashboard/assets/fema_zones.parquet"  # lightweight, merged (A/V) vector layer — set to None to skip
+DATA_URL = "https://github.com/akhalid-twi/dashboards/raw/main/lwi-aep-comparison-dashboard/assets/dashboard_data_lw.parquet"
+FEMA_URL = "https://github.com/akhalid-twi/dashboards/raw/main/lwi-aep-comparison-dashboard/assets/fema_zones.parquet"  # set to None to skip
 
 DEFAULT_MAP_CENTER = [29.95, -89.90]
 DEFAULT_MAP_ZOOM = 10
@@ -48,17 +50,25 @@ if "map_zoom" not in st.session_state:
 # -----------------------------------------------------------------------
 # Load data (cached — this part is genuinely safe to cache, since it's
 # read-only data with no mutation risk)
+#
+# Fetches raw bytes via urllib and hands geopandas a BytesIO buffer,
+# rather than passing a URL string straight into gpd.read_parquet(). The
+# latter routes through pyarrow's filesystem/URI resolution, which kept
+# throwing ArrowInvalid regardless of the URL — fetching bytes first
+# sidesteps that resolution entirely, since geopandas just reads from an
+# in-memory buffer at that point, not a path it has to interpret.
 # -----------------------------------------------------------------------
 @st.cache_data
-def load_data(path):
-    gdf = gpd.read_parquet(path)
+def load_data(url):
+    with urllib.request.urlopen(url) as response:
+        gdf = gpd.read_parquet(BytesIO(response.read()))
     gdf = gdf.dropna(subset=["lat", "lon"])
     gdf = gdf[np.isfinite(gdf["lat"]) & np.isfinite(gdf["lon"])]
     return gdf
 
 
 with _Timer("load_data (dashboard_data.parquet)"):
-    gdf = load_data(DATA_PATH)
+    gdf = load_data(DATA_URL)
 
 
 @st.cache_resource
@@ -72,19 +82,21 @@ with _Timer("build_spatial_tree"):
 
 
 @st.cache_data
-def load_fema_layer(path):
+def load_fema_layer(url):
     """
     Loads the lightweight, merged FEMA flood-zone layer (built once,
     offline, via extract_dashboard_data.py) — dissolved down to just 2
     shapes (A-type zones, V-type zones) with BFE_min/BFE_max as a summary
     range per zone type. Vector rendering is cheap at this scale (2
     polygons, not thousands), so no raster/image-overlay trick is needed
-    here. Makes NO live calls to FEMA's NFHL REST service.
+    here. Makes NO live calls to FEMA's NFHL REST service — this fetches
+    a static file from your own GitHub repo, not hazards.fema.gov.
     """
-    if path is None:
+    if url is None:
         return None
     try:
-        fema_gdf = gpd.read_parquet(path)
+        with urllib.request.urlopen(url) as response:
+            fema_gdf = gpd.read_parquet(BytesIO(response.read()))
         if fema_gdf.crs != "EPSG:4326":
             fema_gdf = fema_gdf.to_crs(epsg=4326)
         return json.loads(fema_gdf.to_json())
@@ -94,7 +106,7 @@ def load_fema_layer(path):
 
 
 with _Timer("load_fema_layer"):
-    fema_geojson = load_fema_layer(FEMA_PATH)
+    fema_geojson = load_fema_layer(FEMA_URL)
 
 # -----------------------------------------------------------------------
 # Header
