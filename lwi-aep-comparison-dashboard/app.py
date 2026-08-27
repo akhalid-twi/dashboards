@@ -278,6 +278,27 @@ with col_map:
         ).add_to(m)
         folium.LayerControl().add_to(m)
 
+        # Right-click anywhere on the map to get its coordinates, similar
+        # to Google Maps' "What's here?" — opens a popup with lat/lon and
+        # a one-click copy button. Leaflet doesn't have this built in, so
+        # it's added via a small injected JS handler on the map's own
+        # contextmenu (right-click) event.
+        rightclick_js = f"""
+        {m.get_name()}.on('contextmenu', function(e) {{
+            e.originalEvent.preventDefault();
+            var lat = e.latlng.lat.toFixed(6);
+            var lng = e.latlng.lng.toFixed(6);
+            var content = '<b>Lat:</b> ' + lat + '<br><b>Lng:</b> ' + lng +
+                '<br><button onclick="navigator.clipboard.writeText(\\'' + lat + ', ' + lng + '\\')">'
+                + 'Copy coordinates</button>';
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent(content)
+                .openOn({m.get_name()});
+        }});
+        """
+        m.get_root().script.add_child(folium.Element(rightclick_js))
+
         fg_selected = folium.FeatureGroup(name="Selected Cell Marker")
         selected_row = gdf.iloc[st.session_state.selected_idx]
         folium.Marker(
