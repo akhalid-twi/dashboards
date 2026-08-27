@@ -124,43 +124,27 @@ if "show_about_dialog" not in st.session_state:
     st.session_state.show_about_dialog = True
 
 
-@st.dialog("About this dashboard — what am I looking at?")
+@st.dialog("About this dashboard")
 def show_about_dialog():
     st.markdown(
         """
-**What this shows:** for a set of sampled model points along the coast, this dashboard compares two
-independently-derived Annual Exceedance Probability (AEP) curves — Water Surface Elevation (WSE)
-as a function of return period — so the two can be checked against each other and against FEMA's
-regulatory flood elevations at the same location.
+Compares two AEP (Annual Exceedance Probability) curves — Water Surface Elevation vs. return
+period — at sampled coastal model points, alongside FEMA's regulatory flood elevations.
 
-**The two datasets being compared:**
+**TC** = Tropical Cyclone.
 
-- **TC Surge AEP (CPRA)** — the same 645 CPRA ADCIRC storm simulations, simply rerun through
-  HEC-RAS: coastal boundary forcing and wind fields come directly from those ADCIRC runs, with
-  river discharge from USGS gage records, randomly sampled during hurricane season. This dataset
-  represents storm surge conditions without a varying rainfall/runoff or soil moisture component.
+- **TC Surge AEP (CPRA)** — the 645 CPRA ADCIRC storms, rerun through HEC-RAS. Coastal boundary/wind
+  forcing from ADCIRC; river discharge from USGS gages, randomly sampled during hurricane season.
+  Surge only — no varying rainfall or soil moisture.
 
-- **TC Compound AEP** — also HEC-RAS runs, built to represent compound flooding (surge combined
-  with rainfall-driven runoff) on top of that same 645-storm surge basis. The full combinatorial
-  space is 645 storms x 500 random rainfall realizations x 5 unique soil moisture conditions =
-  1,612,500 possible scenarios; optimal sampling was used to select 10,000 unique runs that
-  represent that full space. Coastal boundary forcings and winds again come from the ADCIRC CPRA
-  storms, with river discharge from USGS gages as in TC Surge — but each run additionally has its
-  own unique rainfall and soil moisture forcing, which is what makes this a compound-flooding
-  representation rather than surge-only.
+- **TC Compound AEP** — also HEC-RAS, but adds rainfall-driven runoff on top of that same 645-storm
+  basis. 645 storms x 500 rainfall realizations x 5 soil moisture conditions = 1,612,500 scenarios,
+  optimally sampled down to 10,000 runs.
 
-**Other layers on the map:**
-- **Sampled RAS cells** (or **SACS Save Points**, depending on which cell layout you're viewing) —
-  the individual model points you can click to load their AEP comparison.
-- **FEMA Flood Zones** (toggle on via the layer control, top-right of the map) — NFHL A-zone and
-  V-zone extents, shown with a min/max Base Flood Elevation (BFE) range per zone type. Click a point
-  to see the specific FEMA 100-yr BFE value at that location (if it falls within a mapped zone),
-  drawn as a horizontal reference line on the AEP plot.
+**FEMA Flood Zones** (layer control, top-right) shows A/V zone extents with a BFE range; click a
+point to see its specific 100-yr BFE as a reference line on the plot.
 
-**How to use it:** click any point on the map to load its AEP comparison in the panel on the right.
-Vertical dashed lines mark the 10/100/500/1000-year return periods for reference.
-
-*This is a draft, work-in-progress tool — see the disclaimer at the bottom of the page.*
+*Draft, work-in-progress — see disclaimer at the bottom of the page.*
         """
     )
     if st.button("Got it, close"):
@@ -182,12 +166,9 @@ if st.button("ℹ️ About this dashboard"):
 # -----------------------------------------------------------------------
 st.markdown(
     """
-Comparing two AEP (Annual Exceedance Probability) curves at sampled coastal model points, both from
-HEC-RAS runs sharing the same 645 CPRA ADCIRC storms for coastal boundary/wind forcing and USGS
-gage discharge: **TC Surge AEP (CPRA)** — those 645 storms rerun directly through HEC-RAS, surge
-only — vs. **TC Compound AEP** — surge plus rainfall-driven runoff, 10,000 runs optimally sampled
-from 645 storms x 500 rainfall realizations x 5 soil moisture conditions. Click any point on the
-map to compare the two at that location, alongside the FEMA 100-yr BFE where available.
+**TC** = Tropical Cyclone. Click a point on the map to compare:
+- **TC Surge AEP (CPRA)** — surge only (645 CPRA ADCIRC storms rerun in HEC-RAS)
+- **TC Compound AEP** — surge + rainfall runoff (10,000 runs, optimally sampled)
 """
 )
 
@@ -403,3 +384,10 @@ with col_plot:
     st.plotly_chart(fig, width='stretch')
     print(f"[TIMER] AEP plot build (JSON parse + plotly figure): "
           f"{time.perf_counter() - _t0_plot:.3f}s")
+
+# -----------------------------------------------------------------------
+# Footer disclaimer — outside col_map/col_plot, so it spans the full
+# page width rather than being confined to one narrow column.
+# -----------------------------------------------------------------------
+st.markdown("---")
+st.caption("**DRAFT — NOT FOR REDISTRIBUTION.** Not for decision making. © The Water Institute")
