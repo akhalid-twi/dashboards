@@ -276,26 +276,49 @@ with col_map:
                 'zoomToBoundsOnClick': False,
             },
         ).add_to(m)
-        folium.LayerControl(collapsed=False).add_to(m)
+        folium.LayerControl().add_to(m)
 
         # Right-click anywhere on the map to get its coordinates, similar
         # to Google Maps' "What's here?" — opens a popup with lat/lon and
         # a one-click copy button. Leaflet doesn't have this built in, so
         # it's added via a small injected JS handler on the map's own
         # contextmenu (right-click) event.
+        #
+        # Wrapped in a retry loop rather than binding immediately: st_folium
+        # doesn't render the same way a plain folium.Map().save() does, so
+        # a script that assumes the map variable already exists can run
+        # before Leaflet has actually finished initializing it — the
+        # handler then silently never binds (a console error, invisible
+        # unless dev tools are open), and the browser's native right-click
+        # menu shows instead since preventDefault() never gets called.
+        map_var = m.get_name()
         rightclick_js = f"""
-        {m.get_name()}.on('contextmenu', function(e) {{
-            e.originalEvent.preventDefault();
-            var lat = e.latlng.lat.toFixed(6);
-            var lng = e.latlng.lng.toFixed(6);
-            var content = '<b>Lat:</b> ' + lat + '<br><b>Lng:</b> ' + lng +
-                '<br><button onclick="navigator.clipboard.writeText(\\'' + lat + ', ' + lng + '\\')">'
-                + 'Copy coordinates</button>';
-            L.popup()
-                .setLatLng(e.latlng)
-                .setContent(content)
-                .openOn({m.get_name()});
-        }});
+        (function() {{
+            var attempts = 0;
+            var tryBind = function() {{
+                attempts++;
+                if (typeof {map_var} !== 'undefined' && {map_var}) {{
+                    {map_var}.on('contextmenu', function(e) {{
+                        e.originalEvent.preventDefault();
+                        var lat = e.latlng.lat.toFixed(6);
+                        var lng = e.latlng.lng.toFixed(6);
+                        var content = '<b>Lat:</b> ' + lat + '<br><b>Lng:</b> ' + lng +
+                            '<br><button onclick="navigator.clipboard.writeText(\\'' + lat + ', ' + lng + '\\')">'
+                            + 'Copy coordinates</button>';
+                        L.popup()
+                            .setLatLng(e.latlng)
+                            .setContent(content)
+                            .openOn({map_var});
+                    }});
+                    console.log('[right-click coords] bound successfully after ' + attempts + ' attempt(s)');
+                }} else if (attempts < 20) {{
+                    setTimeout(tryBind, 250);
+                }} else {{
+                    console.warn('[right-click coords] gave up waiting for map variable {map_var}');
+                }}
+            }};
+            tryBind();
+        }})();
         """
         m.get_root().script.add_child(folium.Element(rightclick_js))
 
