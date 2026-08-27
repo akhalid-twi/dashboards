@@ -114,18 +114,19 @@ with _Timer("load_fema_layer"):
 st.title("Coastwide — AEP Comparison Dashboard")
 
 # -----------------------------------------------------------------------
-# "About this dashboard" — floating modal popup, not an inline expander.
-# Opens automatically on first load / a real page refresh (since
-# st.session_state resets then); once dismissed within a session, it
-# stays closed across ordinary clicks (map selections, etc.) and can be
-# reopened anytime via the small button below the title.
+# "About this dashboard" — a popover (floating panel), not a dialog.
+# Popovers open/close entirely client-side, with NO script rerun — unlike
+# st.dialog, which requires a full rerun to close (that's the "refresh"
+# feeling from before). Trade-off: a popover can't auto-open on page load
+# the way a dialog can, so a one-time toast nudges first-time visitors to
+# click it instead — the toast auto-dismisses on its own, no interaction
+# or rerun needed to close it either.
 # -----------------------------------------------------------------------
-if "show_about_dialog" not in st.session_state:
-    st.session_state.show_about_dialog = True
+if "seen_about_toast" not in st.session_state:
+    st.session_state.seen_about_toast = True
+    st.toast("New here? Click ℹ️ About this dashboard below the title.", icon="ℹ️")
 
-
-@st.dialog("About this dashboard")
-def show_about_dialog():
+with st.popover("ℹ️ About this dashboard"):
     st.markdown(
         """
 Compares two AEP (Annual Exceedance Probability) curves — Water Surface Elevation vs. return
@@ -147,17 +148,6 @@ point to see its specific 100-yr BFE as a reference line on the plot.
 *Draft, work-in-progress — see disclaimer at the bottom of the page.*
         """
     )
-    if st.button("Got it, close"):
-        st.session_state.show_about_dialog = False
-        st.rerun()
-
-
-if st.session_state.show_about_dialog:
-    show_about_dialog()
-
-if st.button("ℹ️ About this dashboard"):
-    st.session_state.show_about_dialog = True
-    st.rerun()
 
 # -----------------------------------------------------------------------
 # Always-visible, compact summary under the title — a quick reminder of
@@ -167,7 +157,7 @@ if st.button("ℹ️ About this dashboard"):
 st.markdown(
     """
 **TC** = Tropical Cyclone. Click a point on the map to compare:
-- **TC Surge AEP (CPRA)** — surge only (645 CPRA ADCIRC storms rerun in HEC-RAS)
+- **TC Surge AEP (CPRA)** — surge only + no rainfall (645 CPRA ADCIRC storms rerun in HEC-RAS)
 - **TC Compound AEP** — surge + rainfall runoff (10,000 runs, optimally sampled)
 """
 )
@@ -235,7 +225,7 @@ with col_map:
         callback_js = """
         function (row) {
             var marker = L.circleMarker(new L.LatLng(row[0], row[1]), {
-                radius: 3, fillColor: '#2171b5', color: '#2171b5', weight: 1, fillOpacity: 0.6
+                radius: 2, fillColor: '#000000', color: '#000000', weight: 1, fillOpacity: 0.3
             });
             return marker;
         };
