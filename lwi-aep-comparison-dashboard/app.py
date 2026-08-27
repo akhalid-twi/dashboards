@@ -169,7 +169,7 @@ st.markdown(
     """
 **TC** = Tropical Cyclone. Click a point on the map to compare:
 - **TC Surge AEP (CPRA)** — surge + discharge + wind + no rainfall (645 CPRA ADCIRC storms rerun in HEC-RAS)
-- **TC Compound AEP** — surge + discharge + wind + rainfall runoff (10,000 runs, optimally sampled)
+- **TC Compound AEP** — surge + discharge + wind + rainfall runoff (10,000 runs, optimally sampled, ran on HEC-RAS)
 """
 )
 
