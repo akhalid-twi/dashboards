@@ -114,29 +114,48 @@ with _Timer("load_fema_layer"):
 st.title("Coastwide — AEP Comparison Dashboard")
 
 # -----------------------------------------------------------------------
-# "About this dashboard" — a popover (floating panel), not a dialog.
-# Popovers open/close entirely client-side, with NO script rerun — unlike
-# st.dialog, which requires a full rerun to close.
-#
-# A popover can't auto-open on page load, so a persistent banner nudges
-# first-time visitors to click it instead. Unlike a toast (which
-# auto-dismisses after a few seconds), this stays visible until the user
-# dismisses it — dismissing does trigger one rerun (unavoidable for any
-# element controlled by session_state), same as clicking a map point does.
+# Disclaimer + About — a full gating dialog shown automatically on first
+# load / a real page refresh (session_state resets then). Must be
+# explicitly dismissed via the button; closing it does trigger one rerun,
+# which is expected/appropriate here since this is an intentional gate,
+# not a passing hint.
 # -----------------------------------------------------------------------
-if "seen_about_banner" not in st.session_state:
-    st.session_state.seen_about_banner = False
+if "seen_disclaimer_dialog" not in st.session_state:
+    st.session_state.seen_disclaimer_dialog = False
 
-if not st.session_state.seen_about_banner:
-    banner_msg_col, banner_btn_col = st.columns([12, 1])
-    with banner_msg_col:
-        st.info("**New here?** Click **ℹ️ About this dashboard** below to see what's being compared.")
-    with banner_btn_col:
-        st.write("")  # vertical spacer to align the button with the info box
-        if st.button("✕", key="dismiss_about_banner", help="Dismiss"):
-            st.session_state.seen_about_banner = True
-            st.rerun()
 
+@st.dialog("Disclaimer & About This Dashboard")
+def show_disclaimer_dialog():
+    st.markdown(
+        """
+**DRAFT — NOT FOR REDISTRIBUTION. Not to be used for decision making.** © The Water Institute
+
+---
+
+Compares two AEP (Annual Exceedance Probability) curves — Water Surface Elevation vs. return
+period — at sampled coastal model points, alongside FEMA's regulatory flood elevations.
+
+**TC** = Tropical Cyclone.
+
+- **TC Surge AEP (CPRA)** — surge + discharge + wind + no rainfall (645 CPRA ADCIRC storms rerun
+  in HEC-RAS).
+- **TC Compound AEP** — surge + discharge + wind + rainfall runoff (10,000 runs, optimally sampled,
+  ran on HEC-RAS).
+
+**FEMA Flood Zones** (layer control, top-right of the map) shows A/V zone extents with a BFE range;
+click a point to see its specific 100-yr BFE as a reference line on the plot.
+        """
+    )
+    if st.button("I understand, continue"):
+        st.session_state.seen_disclaimer_dialog = True
+        st.rerun()
+
+
+if not st.session_state.seen_disclaimer_dialog:
+    show_disclaimer_dialog()
+
+# Popover stays available afterward for re-reading the dashboard info
+# (not the disclaimer gate itself) without needing a full page refresh.
 with st.popover("ℹ️ About this dashboard"):
     st.markdown(
         """
@@ -162,8 +181,8 @@ point to see its specific 100-yr BFE as a reference line on the plot.
 
 # -----------------------------------------------------------------------
 # Always-visible, compact summary under the title — a quick reminder of
-# what the two curves mean without needing to reopen the popup. Shorter
-# than the full dialog text; see the popup above for the fuller version.
+# what the two curves mean without needing to reopen the popover. Shorter
+# than the full popover text; see the popover above for the fuller version.
 # -----------------------------------------------------------------------
 st.markdown(
     """
