@@ -276,7 +276,7 @@ with col_map:
                 'zoomToBoundsOnClick': False,
             },
         ).add_to(m)
-        folium.LayerControl().add_to(m)
+        folium.LayerControl(collapsed=False).add_to(m)
 
         # Right-click anywhere on the map to get its coordinates, similar
         # to Google Maps' "What's here?" — opens a popup with lat/lon and
