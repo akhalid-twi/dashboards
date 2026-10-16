@@ -410,7 +410,7 @@ with col_plot:
         fig.add_hline(
             y=fema_bfe, line_dash="dashdot", line_color="#9C27B0", line_width=2.5,
             annotation_text=f"FEMA 100-Yr BFE ({fema_bfe:.2f} ft)",
-            annotation_position="top left", annotation_font=dict(size=11, color="#9C27B0"),
+            annotation_position="top left", annotation_font=dict(size=15, color="#9C27B0"),
         )
 
     # y-axis upper limit: 2 ft of headroom above whichever is higher — the
@@ -429,21 +429,31 @@ with col_plot:
     for rp in [10, 100, 500, 1000]:
         fig.add_vline(x=rp, line_dash="dash", line_color="gray", opacity=0.4)
 
+    # Text sizes are larger than Plotly's defaults so axis titles, tick
+    # labels and the legend stay legible in screenshots of the dashboard.
     fig.update_layout(
         template="plotly_white",
+        font=dict(size=16),
         xaxis=dict(
-            type="log", title="Return Period (years)",
-            range=[np.log10(1), np.log10(10000)],
-            tickvals=[2, 5, 10, 25, 50, 100, 250, 500, 1000, 2000, 5000, 10000],
-            ticktext=["2", "5", "10", "25", "50", "100", "250", "500", "1000", "2000", "5000", "10000"],
+            type="log", title=dict(text="Return Period (years)", font=dict(size=19)),
+            tickfont=dict(size=16), tickangle=0,
+            # 250/2000/10000 labels dropped: at this font size they crowd their
+            # neighbours and Plotly would rotate every label to fit.
+            range=[np.log10(1.5), np.log10(7000)],
+            tickvals=[2, 5, 10, 25, 50, 100, 500, 1000, 5000],
+            ticktext=["2", "5", "10", "25", "50", "100", "500", "1000", "5000"],
         ),
         yaxis=dict(
-            title="WSE (ft)",
+            title=dict(text="WSE (ft)", font=dict(size=19)),
+            tickfont=dict(size=16),
             range=[y_lower, y_upper] if y_upper is not None else None,
         ),
-        height=600,
-        margin=dict(l=10, r=10, t=70, b=10),
-        legend=dict(title="Scenario", orientation="h", y=1.02, x=0.0, xanchor="left"),
+        height=450,  # shorter than the map so the curves aren't stretched vertically
+        margin=dict(l=10, r=10, t=85, b=10),
+        # anchored at its bottom so a wrapped (two-row) legend grows upward
+        # into the top margin instead of down over the plot
+        legend=dict(title=dict(text="Scenario", font=dict(size=16)), font=dict(size=16),
+                    orientation="h", y=1.02, yanchor="bottom", x=0.0, xanchor="left"),
     )
     st.plotly_chart(fig, width='stretch')
     print(f"[TIMER] AEP plot build (JSON parse + plotly figure): "
