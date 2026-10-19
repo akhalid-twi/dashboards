@@ -41,6 +41,7 @@ DEFAULT_MAP_CENTER = [29.95, -89.90]
 CHART_HEIGHT = 450          # short enough that the AEP curves aren't stretched
 CELL_HEADER_PX = 40         # "Cell: ... | FEMA BFE" line + Streamlit's element gap
 MAP_HEIGHT = CHART_HEIGHT + CELL_HEADER_PX
+TEXT_COLOR = "#1A1A1A"     # near-black chart text, legible in screenshots
 DEFAULT_MAP_ZOOM = 10
 
 # -----------------------------------------------------------------------
@@ -437,12 +438,15 @@ with col_plot:
 
     # Text sizes are larger than Plotly's defaults so axis titles, tick
     # labels and the legend stay legible in screenshots of the dashboard.
+    # Colours are set on every text element, not just layout.font:
+    # st.plotly_chart's Streamlit theme sets axis/legend text to gray at
+    # the element level, which would override a layout-wide font colour.
     fig.update_layout(
         template="plotly_white",
-        font=dict(size=16, color="#1A1A1A"),  # near-black text for screenshots
+        font=dict(size=16, color=TEXT_COLOR),
         xaxis=dict(
-            type="log", title=dict(text="Return Period (years)", font=dict(size=19)),
-            tickfont=dict(size=16), tickangle=0,
+            type="log", title=dict(text="Return Period (years)", font=dict(size=19, color=TEXT_COLOR)),
+            tickfont=dict(size=16, color=TEXT_COLOR), tickangle=0,
             # 250/2000/10000 labels dropped: at this font size they crowd their
             # neighbours and Plotly would rotate every label to fit.
             range=[np.log10(1.5), np.log10(7000)],
@@ -450,15 +454,16 @@ with col_plot:
             ticktext=["2", "5", "10", "25", "50", "100", "500", "1000", "5000"],
         ),
         yaxis=dict(
-            title=dict(text="WSE (ft)", font=dict(size=19)),
-            tickfont=dict(size=16),
+            title=dict(text="WSE (ft)", font=dict(size=19, color=TEXT_COLOR)),
+            tickfont=dict(size=16, color=TEXT_COLOR),
             range=[y_lower, y_upper] if y_upper is not None else None,
         ),
         height=CHART_HEIGHT,
         margin=dict(l=10, r=10, t=85, b=10),
         # anchored at its bottom so a wrapped (two-row) legend grows upward
         # into the top margin instead of down over the plot
-        legend=dict(title=dict(text="Scenario", font=dict(size=16)), font=dict(size=16),
+        legend=dict(title=dict(text="Scenario", font=dict(size=16, color=TEXT_COLOR)),
+                    font=dict(size=16, color=TEXT_COLOR),
                     orientation="h", y=1.02, yanchor="bottom", x=0.0, xanchor="left"),
     )
     st.plotly_chart(fig, width='stretch')
