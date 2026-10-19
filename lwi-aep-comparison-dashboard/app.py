@@ -38,10 +38,13 @@ DEFAULT_MAP_CENTER = [29.95, -89.90]
 
 # The map's height matches the plot column (cell header line + chart), so
 # the two panels line up top and bottom for screenshots.
-CHART_HEIGHT = 450          # short enough that the AEP curves aren't stretched
+CHART_HEIGHT = 560          # room for the large text without stretching the curves
 CELL_HEADER_PX = 40         # "Cell: ... | FEMA BFE" line + Streamlit's element gap
 MAP_HEIGHT = CHART_HEIGHT + CELL_HEADER_PX
 TEXT_COLOR = "#1A1A1A"     # near-black chart text, legible in screenshots
+# Chart text sizes (px) — large so they stay legible when a screenshot of
+# the dashboard is shrunk to fit a one-page PDF.
+TICK_PX, LEGEND_PX, AXIS_TITLE_PX, ANNOTATION_PX = 32, 32, 38, 30
 DEFAULT_MAP_ZOOM = 10
 
 # -----------------------------------------------------------------------
@@ -416,8 +419,8 @@ with col_plot:
     if fema_bfe is not None:
         fig.add_hline(
             y=fema_bfe, line_dash="dashdot", line_color="#9C27B0", line_width=2.5,
-            annotation_text=f"FEMA 100-Yr BFE ({fema_bfe:.2f} ft)",
-            annotation_position="top left", annotation_font=dict(size=15, color="#9C27B0"),
+            annotation_text="FEMA 100-Yr BFE",  # value is in the header line above the chart
+            annotation_position="top left", annotation_font=dict(size=ANNOTATION_PX, color="#9C27B0"),
         )
 
     # y-axis upper limit: 2 ft of headroom above whichever is higher — the
@@ -443,28 +446,29 @@ with col_plot:
     # the element level, which would override a layout-wide font colour.
     fig.update_layout(
         template="plotly_white",
-        font=dict(size=16, color=TEXT_COLOR),
+        font=dict(size=TICK_PX, color=TEXT_COLOR),
         xaxis=dict(
-            type="log", title=dict(text="Return Period (years)", font=dict(size=19, color=TEXT_COLOR)),
-            tickfont=dict(size=16, color=TEXT_COLOR), tickangle=0,
-            # 250/2000/10000 labels dropped: at this font size they crowd their
-            # neighbours and Plotly would rotate every label to fit.
-            range=[np.log10(1.5), np.log10(7000)],
-            tickvals=[2, 5, 10, 25, 50, 100, 500, 1000, 5000],
-            ticktext=["2", "5", "10", "25", "50", "100", "500", "1000", "5000"],
+            type="log", title=dict(text="Return Period (years)", font=dict(size=AXIS_TITLE_PX, color=TEXT_COLOR)),
+            tickfont=dict(size=TICK_PX, color=TEXT_COLOR), tickangle=0,
+            # Only a few labels: at this font size neighbours like 500/1000 or
+            # 1000/5000 would overlap and Plotly would rotate every label to fit.
+            range=[np.log10(1.5), np.log10(10000)],
+            tickvals=[2, 10, 100, 1000],
+            ticktext=["2", "10", "100", "1000"],
         ),
         yaxis=dict(
-            title=dict(text="WSE (ft)", font=dict(size=19, color=TEXT_COLOR)),
-            tickfont=dict(size=16, color=TEXT_COLOR),
+            title=dict(text="WSE (ft)", font=dict(size=AXIS_TITLE_PX, color=TEXT_COLOR)),
+            tickfont=dict(size=TICK_PX, color=TEXT_COLOR),
             range=[y_lower, y_upper] if y_upper is not None else None,
         ),
         height=CHART_HEIGHT,
-        margin=dict(l=10, r=10, t=85, b=10),
-        # anchored at its bottom so a wrapped (two-row) legend grows upward
-        # into the top margin instead of down over the plot
-        legend=dict(title=dict(text="Scenario", font=dict(size=16, color=TEXT_COLOR)),
-                    font=dict(size=16, color=TEXT_COLOR),
-                    orientation="h", y=1.02, yanchor="bottom", x=0.0, xanchor="left"),
+        margin=dict(l=10, r=10, t=135, b=10),
+        # Stacked legend in the top margin: at this font size a horizontal
+        # one would overflow the column. Anchored at its bottom so it grows
+        # upward, away from the plot.
+        legend=dict(title=dict(text="Scenario", font=dict(size=LEGEND_PX, color=TEXT_COLOR)),
+                    font=dict(size=LEGEND_PX, color=TEXT_COLOR),
+                    orientation="v", y=1.02, yanchor="bottom", x=0.0, xanchor="left"),
     )
     st.plotly_chart(fig, width='stretch')
     print(f"[TIMER] AEP plot build (JSON parse + plotly figure): "
