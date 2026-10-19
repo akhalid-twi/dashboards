@@ -35,6 +35,12 @@ DATA_URL = "https://github.com/akhalid-twi/dashboards/raw/main/lwi-aep-compariso
 FEMA_URL = "https://github.com/akhalid-twi/dashboards/raw/main/lwi-aep-comparison-dashboard/assets/fema_zones.parquet"  # set to None to skip
 
 DEFAULT_MAP_CENTER = [29.95, -89.90]
+
+# The map's height matches the plot column (cell header line + chart), so
+# the two panels line up top and bottom for screenshots.
+CHART_HEIGHT = 450          # short enough that the AEP curves aren't stretched
+CELL_HEADER_PX = 40         # "Cell: ... | FEMA BFE" line + Streamlit's element gap
+MAP_HEIGHT = CHART_HEIGHT + CELL_HEADER_PX
 DEFAULT_MAP_ZOOM = 10
 
 # -----------------------------------------------------------------------
@@ -255,7 +261,7 @@ with col_map:
         callback_js = """
         function (row) {
             var marker = L.circleMarker(new L.LatLng(row[0], row[1]), {
-                radius: 2, fillColor: '#000000', color: '#000000', weight: 1, fillOpacity: 0.3
+                radius: 2, fillColor: '#000000', color: '#000000', weight: 0.4, fillOpacity: 0.3
             });
             return marker;
         };
@@ -337,7 +343,7 @@ with col_map:
             zoom=st.session_state.map_zoom,
             feature_group_to_add=fg_selected,
             width='stretch',
-            height=650,
+            height=MAP_HEIGHT,
             returned_objects=["last_clicked"],
             key="aep_interactive_map",
         )
@@ -433,7 +439,7 @@ with col_plot:
     # labels and the legend stay legible in screenshots of the dashboard.
     fig.update_layout(
         template="plotly_white",
-        font=dict(size=16),
+        font=dict(size=16, color="#1A1A1A"),  # near-black text for screenshots
         xaxis=dict(
             type="log", title=dict(text="Return Period (years)", font=dict(size=19)),
             tickfont=dict(size=16), tickangle=0,
@@ -448,7 +454,7 @@ with col_plot:
             tickfont=dict(size=16),
             range=[y_lower, y_upper] if y_upper is not None else None,
         ),
-        height=450,  # shorter than the map so the curves aren't stretched vertically
+        height=CHART_HEIGHT,
         margin=dict(l=10, r=10, t=85, b=10),
         # anchored at its bottom so a wrapped (two-row) legend grows upward
         # into the top margin instead of down over the plot
