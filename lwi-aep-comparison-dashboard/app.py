@@ -39,7 +39,7 @@ DEFAULT_MAP_CENTER = [29.95, -89.90]
 # The map's height matches the plot column (cell header line + chart), so
 # the two panels line up top and bottom for screenshots.
 CHART_HEIGHT = 560          # room for the large text without stretching the curves
-CELL_HEADER_PX = 40         # "Cell: ... | FEMA BFE" line + Streamlit's element gap
+CELL_HEADER_PX = 34         # "Cell: ... | FEMA BFE" line + Streamlit's element gap
 MAP_HEIGHT = CHART_HEIGHT + CELL_HEADER_PX
 TEXT_COLOR = "#1A1A1A"     # near-black chart text, legible in screenshots
 # Chart text sizes (px) — large so they stay legible when a screenshot of
@@ -204,6 +204,20 @@ st.markdown(
 
 col_map, col_plot = st.columns([3, 2])
 
+# Thin black frame around the map panel and around the plot panel, so a
+# screenshot of the two reads as a framed figure. Streamlit adds a
+# st-key-<key> class to keyed containers; st.html with only a <style>
+# block takes no space on the page.
+st.html("""
+<style>
+.st-key-map_frame, .st-key-plot_frame {
+    border: 1px solid #000;
+    border-radius: 0;
+    padding: 6px;
+}
+</style>
+""")
+
 # -----------------------------------------------------------------------
 # Handle a click from the PREVIOUS run before building the map, so the
 # selected marker reflects the latest click on this render.
@@ -239,7 +253,7 @@ if "aep_interactive_map" in st.session_state and st.session_state["aep_interacti
 # capping the point count and simplifying/dissolving the FEMA polygons at
 # export time. So rebuilding fresh each run is both correct AND fast.
 # -----------------------------------------------------------------------
-with col_map:
+with col_map, st.container(key="map_frame"):
     with _Timer("build map"):
         m = folium.Map(location=DEFAULT_MAP_CENTER, zoom_start=DEFAULT_MAP_ZOOM, tiles="OpenStreetMap")
 
@@ -383,7 +397,7 @@ LABEL_MAP = {
     "LWI_TC_Base": "TC Compound AEP",
 }
 
-with col_plot:
+with col_plot, st.container(key="plot_frame"):
     _t0_plot = time.perf_counter()
     raw_bfe = selected_row.get("fema_bfe")
     try:
