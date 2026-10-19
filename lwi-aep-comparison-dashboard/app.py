@@ -482,8 +482,13 @@ with col_plot, st.container(key="plot_frame"):
         # upward, away from the plot.
         legend=dict(title=dict(text="Scenario", font=dict(size=LEGEND_PX, color=TEXT_COLOR)),
                     font=dict(size=LEGEND_PX, color=TEXT_COLOR),
-                    orientation="v", y=1.02, yanchor="bottom", x=0.0, xanchor="left"),
+                    orientation="v", y=1.04, yanchor="bottom", x=0.0, xanchor="left",
+                    bgcolor="rgba(0,0,0,0)"),  # transparent: don't mask the plot frame
     )
+    # Closed box around the plotting area (all four sides)
+    frame = dict(showline=True, mirror=True, linecolor=TEXT_COLOR, linewidth=1)
+    fig.update_xaxes(**frame)
+    fig.update_yaxes(**frame)
     st.plotly_chart(fig, width='stretch')
     print(f"[TIMER] AEP plot build (JSON parse + plotly figure): "
           f"{time.perf_counter() - _t0_plot:.3f}s")
